@@ -4,8 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/url"
-
-	"github.com/nlopes/slack/slackutilsx"
+	"strings"
 )
 
 const (
@@ -22,6 +21,13 @@ const (
 	DEFAULT_MESSAGE_MARKDOWN         = true
 	DEFAULT_MESSAGE_ESCAPE_TEXT      = true
 )
+
+// (2018-09-23) was previously in the slackutilsx sub-package, but doesn't play
+// nice with dep. should resolve if this is ever fied in upstream
+func escapeMessage(message string) string {
+	replacer := strings.NewReplacer("&", "&amp;", "<", "&lt;", ">", "&gt;")
+	return replacer.Replace(message)
+}
 
 type chatResponseFull struct {
 	Channel          string `json:"channel"`
@@ -295,7 +301,7 @@ func MsgOptionUser(userID string) MsgOption {
 func MsgOptionText(text string, escape bool) MsgOption {
 	return func(config *sendConfig) error {
 		if escape {
-			text = slackutilsx.EscapeMessage(text)
+			text = escapeMessage(text)
 		}
 		config.values.Add("text", text)
 		return nil
